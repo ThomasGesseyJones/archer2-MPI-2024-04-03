@@ -243,5 +243,82 @@ Online documentation for MPI is a bit poor. MPI books are generally a better way
 Print ordering between processes is not guaranteed, as there is a lot of buffering between print statements and
 actually reaching the terminal. 
 
+See `/exercises/My_Solutions/Hello_World` for code.
 
 
+### Messages
+
+MPI_Send and MPI_Recv just pass references, so you also have to specify the type of the data being sent. 
+```c++
+int MPI_Send(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm communicator);
+int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm communicator, MPI_Status *status);
+```
+where `buf` is the data to be sent, `count` is the number of data items, `datatype` is the type of the data, `dest` is
+the rank of the destination process, `tag` is an integer tag for the message, and `communicator` is the communicator.
+`source` is the rank of the source process, and `status` is a status object that can be used to get information about
+the received message. Tag is not very useful. Count is just the amount of data reserved, not the actual size of the 
+data received, this allows you to receive unknown amounts of data, as long as you have a bound on the size. In most
+cases it is the same as the number of data items as that is known. To know what was actually sent in the case of an 
+unknown size, you will need to check the status. 
+
+MPI has a number of predefined datatypes, e.g., `MPI_INT`, `MPI_FLOAT`, `MPI_DOUBLE`, etc. These are used to specify
+the type of the data being sent.
+
+MPI sends both the data, but also a header of additional information. This is received into separate storage that is 
+called status. You may never look at it, but you need to specify it.
+
+MPI has different communication modes
+
+| Mode           | Description                                                              |
+|:---------------|--------------------------------------------------------------------------|
+| Synchronous    | Sender waits until receiver has received the message                     |
+| Buffered       | Sender copies data to a buffer, and then can continue (always completes) |
+| Standard send  | Either of the above (you don't know which!)                              |
+| Receive        | Completes when data is received                                          |
+
+Example sending an array of ten integers:
+```c++
+int data[10];
+int rank;
+MPI_STATUS status;
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+if (rank == 0) {
+    for (int i = 0; i < 10; i++) {
+        data[i] = i;
+    }
+    MPI_Ssend(data, 10, MPI_INT, 1, 0, MPI_COMM_WORLD);
+} else if (rank == 1) {
+    MPI_Recv(data, 10, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+    for (int i = 0; i < 10; i++) {
+        printf("Received data[%d] = %d\n", i, data[i]);
+    }
+}
+```
+Rank 0 is not actually special, but it is normally treated as the master process because it always exists. 
+**Warning** tags need to match.
+
+Receivers will wait for sends. Similar to Ssend will wait for receives. Ranks must be valid, for communication to 
+work, the communicator must be the same, the message types must match, and the tags must match. Reciever buffer
+also needs to be big enough to hold the data.
+
+There are also wildcards for any source and any tag, `MPI_ANY_SOURCE` and `MPI_ANY_TAG`. These can be used to
+receive from any source or any tag. The actual one will be stored in the status object. You can access them via
+`status.MPI_SOURCE` and `status.MPI_TAG`.
+
+Message order is preserved for a given source. Messages do not overtake each other, even in a non-synchronous mode. 
+This can be useful with buffered sends. Bear in mind if the tag doesn't match that message will be ignored. So messages 
+can overtake each other but only if you use different tags.
+```c++
+//Rank 0
+Bsend(msg1, dest=1, tag=1);
+Bsend(msg2, dest=1, tag=2);
+//Rank 1
+Recv(msg2, source=0, tag=2);
+Recv(msg1, source=0, tag=1);
+```
+This will work, with msg2 arriving before msg1. 
+
+MPI also has a timer.
+
+
+### Exercise 2: Parallel Calculation of Pi
