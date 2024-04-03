@@ -12,19 +12,37 @@ int main() {
 
     // Initialize MPI
     MPI_Init(NULL, NULL);
+    MPI_Comm comm;
+    comm = MPI_COMM_WORLD;
 
     // Report in
     int rank, size;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    cout << "Hello from process " << rank << " of " << size;
+    MPI_Comm_rank(comm, &rank);
+    MPI_Comm_size(comm, &size);
+    cout << "Hello from process " << rank << " of " << size << endl;
 
     // Start timing
-    MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
+    MPI_Barrier(comm); // Line up at the start line
     double tstart = MPI_Wtime(); // Fire the gun and start the clock
 
+    // Pass array back and forth
+    int array_size = 100;
+    int array[array_size];
+    for (int idx=0; idx<array_size; idx++) {array[idx] = idx;}
+
+    MPI_Status status;
+    for (int exchange_idx=0; exchange_idx<NUM_TIMES_TO_EXCHANGE; exchange_idx++){
+        if (rank == 0){
+            MPI_Ssend(array, array_size, MPI_INT, 1, 0, comm)
+            MPI_Recv(array, array_size, MPI_INT, 1, 0, comm, &status);
+        } else if (rank == 1){
+            MPI_Recv(array, array_size, MPI_INT, 0, 0, comm, &status);
+            MPI_Ssend(array, array_size, MPI_INT, 0, 0, comm);
+        }
+    }
+
     // Finish timing
-    MPI_Barrier(MPI_COMM_WORLD); // Wait for everyone to finish
+    MPI_Barrier(comm); // Wait for everyone to finish
     double tstop = MPI_Wtime(); // Stop the clock
     if (rank == 0) {cout << "Time taken: " << tstop - tstart << " seconds" << endl;}
 
