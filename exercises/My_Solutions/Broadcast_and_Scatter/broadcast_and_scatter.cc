@@ -68,7 +68,7 @@ int main() {
     else {
         MPI_Recv(communicated_array, ARRAY_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         for (int idx=0; idx < ARRAY_SIZE / size; idx++) {
-            array[(receiver * ARRAY_SIZE) / size + idx] = communicated_array[idx];
+            array[(rank * ARRAY_SIZE) / size + idx] = communicated_array[idx];
         }
     }
 
