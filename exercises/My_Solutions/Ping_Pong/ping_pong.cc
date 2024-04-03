@@ -33,7 +33,7 @@ int main() {
     MPI_Status status;
     for (int exchange_idx=0; exchange_idx<NUM_TIMES_TO_EXCHANGE; exchange_idx++){
         if (rank == 0){
-            MPI_Ssend(array, array_size, MPI_INT, 1, 0, comm)
+            MPI_Ssend(array, array_size, MPI_INT, 1, 0, comm);
             MPI_Recv(array, array_size, MPI_INT, 1, 0, comm, &status);
         } else if (rank == 1){
             MPI_Recv(array, array_size, MPI_INT, 0, 0, comm, &status);
