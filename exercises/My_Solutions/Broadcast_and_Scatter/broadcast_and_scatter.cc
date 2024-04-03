@@ -75,15 +75,6 @@ int main() {
     // Print the array again
     print_array(rank, array, ARRAY_SIZE);
 
-    // Start timing
-    //MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
-    //double tstart = MPI_Wtime(); // Fire the gun and start the clock
-
-    // Finish timing
-    //MPI_Barrier(MPI_COMM_WORLD); // Wait for everyone to finish
-    //double tstop = MPI_Wtime(); // Stop the clock
-    //if (rank == 0) {cout << "Time taken: " << tstop - tstart << " seconds" << endl;}
-
     MPI_Finalize();
     return 0;
 }
