@@ -49,7 +49,7 @@ int main() {
     //Calculate the final sum
     double total_sum;
     double received_sum;
-    MPI_STATUS status;
+    MPI_Status status;
     if (rank == 0) {  // Rank 0 is to do the final sum
         total_sum = part_sum;
         for (int sender_rank=1; sender_rank<size; sender_rank++) {
