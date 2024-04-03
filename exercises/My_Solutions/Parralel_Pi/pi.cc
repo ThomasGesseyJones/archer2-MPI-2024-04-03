@@ -58,7 +58,7 @@ int main() {
         if (rank == 0) {  // Rank 0 is to do the final sum
             total_sum = part_sum;
             for (int received_num = 1; received_num < size; received_num++) {
-                MPI_Recv(&received_sum, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
+                MPI_Recv(&received_sum, 1, MPI_DOUBLE, MPI_ANY_SOURCE, pi_calc_num, MPI_COMM_WORLD, &status);
                 total_sum += received_sum;
             }
 
@@ -66,7 +66,7 @@ int main() {
             pi = (4.0 / double(ACCURACY_N)) * total_sum;
 
         } else {
-            MPI_Send(&part_sum, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+            MPI_Send(&part_sum, 1, MPI_DOUBLE, 0, pi_calc_num, MPI_COMM_WORLD);
         }
     }
 
