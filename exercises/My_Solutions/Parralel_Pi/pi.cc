@@ -47,7 +47,7 @@ int main() {
 
     // Start timing
     MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
-    tstart = MPI_Wtime(); // Fire the gun and start the clock
+    double tstart = MPI_Wtime(); // Fire the gun and start the clock
 
     // To get meaningful results, we will calculate pi NUM_TIMES_TO_COMPUTE_PI times
     for (int pi_calc_num = 0; pi_calc_num < NUM_TIMES_TO_COMPUTE_PI; pi_calc_num++) {
@@ -79,7 +79,7 @@ int main() {
 
     // Finish timing
     MPI_Barrier(MPI_COMM_WORLD); // Wait for everyone to finish
-    tstop = MPI_WTime(); // Stop the clock
+    double tstop = MPI_WTime(); // Stop the clock
     if (rank == 0) {cout << "Time taken: " << tstop - tstart << " seconds" << endl;}
 
     MPI_Finalize();
