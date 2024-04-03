@@ -118,3 +118,126 @@ well studied cellular automaton model [https://en.wikipedia.org/wiki/Rule_184](h
 
 Going to split the problem into pieces and give them each to a different process for distributed computing. 
 Problem has standard structure of calculation phase and communication phase alternating.
+
+Communication is required in this problem both for boundary exchange but also collective communication for
+calculating the average speed and density.
+
+Strategy 1: Replicate data, update local part, then communicate to make data consistent. Scales poorly in both data and
+communication. As does not take into account only need to communicate with neighbours. Such strategies can work if
+little data but very complex calculation on its data. 
+
+Strategy 2: Distributed data, each process gets a subset of the data. Need to communicate to update the boundary cells. 
+Load balance, trivially works in this case as long as road pieces equal size. Doing boundary exchange is actually 
+somewhat complex, as at risk of deadlock if all receive then send. Asynchronous communication can help, but need to
+send first then receive. Synchronous can work will if use parity to break symmetry. Correct way (i.e., generalizes) to 
+fix this is non-blocking communication, but this is more complex. See tomorrow.
+
+
+### Message Passing Interface (MPI)
+
+MPI a unified standard from 1993, developed with 60 people from 40 organizations. Not changed much since. Goals
+of MPI is provide source-code portability, and efficient implementation. It offers a great deal of functionality, with
+support for heterogeneous parallel architecture (hence, why a lot of the functions seem over complex). In practice, 
+this is no longer done in scientific computing. 
+
+Library syntax for C++ (actually a C library, but C++ bindings exist). 
+```c++
+#include <mpi.h>
+```
+
+All functions have syntax
+```c++
+error = MPI_Function(arguments);
+```
+where `error` is an integer, and `MPI_Function` is the function name. If `error` is `MPI_SUCCESS` then the function
+succeeded, otherwise it failed. Most people ignore the error code. MPI is not fault-tolerant, but it is quite good at 
+spotting a problem and crashing, to avoid wasting compute time.
+
+MPI controls its own internal data structures, MPI releases 'handles' to allow programmers to reference these, C handles
+are of defined typedefs.
+
+MPI must be initialized (it does not create parallel processes it establishes communication between them). 
+```c++
+int MPI_Init(int *argc, char ***argv);
+```
+passing a pointer to argc and argv, as MPI may modify these. Must be called before any other MPI function. 
+Large parallel programs don't use command line arguments so, most C++ programs will pass `NULL` and `NULL`.
+E.g.,
+```c++
+int main() {
+    MPI_Init(NULL, NULL);
+    // ...
+    return 0;
+}
+```
+
+The scope of communication set in MPI is set by the communicator. Most of the time we use the everyone communicator,
+`MPI_COMM_WORLD`. This is a predefined communicator that includes all processes. Clever stuff can be done with 
+communicators that restrict the scope of communication, but this is not covered in this course.
+
+Each process is identified by its ID, called a rank. This is an integer from 0 to `size - 1`, where `size` is the number
+of processes in the communicator. 
+```c++
+int MPI_Comm_rank(MPI_Comm communicator, int *rank);
+```
+This function returns the rank of the calling process in the communicator.
+
+Best to not hard-code the number of processes, but to get it from MPI. 
+```c++
+int MPI_Comm_size(MPI_Comm communicator, int *size);
+```
+as sometimes you may need to know this, especially if you are doing neighbour communication.
+So a simple hello world program would be:
+```c++
+int main() {
+    MPI_Init(NULL, NULL);
+    int rank, size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);  // note pass variable to give output to as reference
+    MPI_Comm_size(MPI_COMM_WORLD, &size);  // as outputs used for error code
+    printf("Hello world from process %d of %d\n", rank, size);
+    MPI_Finalize();
+    return 0;
+}
+```
+We have also introduced `MPI_Finalize` which must be called after all other MPI functions, and before the program
+exits. This is where MPI tidies up and closes down the communication network.
+
+Sometimes also useful to get mapping of processes to nodes/processes/cores, as helpful for debugging. 
+```c++
+int namelen;
+char processor_name[MPI_MAX_PROCESSOR_NAME];
+MPI_Get_processor_name(processor_name, &namelen);
+```
+Note gives you both the processor name and the length of the name. The latter is not very useful in C but is in 
+Fortran.
+
+
+### MPI on ARCHER2
+
+Login syntax:
+```bash
+ssh -XY user@login.archer2.ac.uk
+```
+where `user` is your username. The `-XY` is for X11 forwarding, so you can run graphical programs on ARCHER2 and have
+them displayed on your local machine. 
+
+ARCHER2 uses SLURM scheduler. ARCHER2 can only run MPI jobs on compute nodes, not login nodes, so we will need to use 
+that even for testing.
+
+Compile using `CC`, as ARCHER2 is a dedicate parallel system, its compilers are already set-up with the
+appropriate MPI library pathing by using these wrappers.
+
+Idiosyncrasies:
+* Not possible to run MPI directly on login nodes
+* Cannot run from the home directory, nodes can only see work, so move to that
+
+ARCHER2 does support interactive jobs. Can be very useful for debugging. But, limited to
+short jobs. 
+
+Online documentation for MPI is a bit poor. MPI books are generally a better way to learn it. A good example is
+"Using MPI" by Gropp, Lusk, and Skjellum.
+
+
+### Exercise 1: Hello World
+
+
