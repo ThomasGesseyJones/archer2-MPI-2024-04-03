@@ -4,26 +4,21 @@
 using namespace std;
 
 // Constants
-int ACCURACY_N = 84000;  // Number of terms in the series e.g., the accuracy of the calculation
-int NUM_TIMES_TO_COMPUTE_PI = 10000;  // Number of times to compute pi
-
-double partial_sum(int start, int end, int total_n) {
-    // Calculate the partial sum of 1/(1 + ((i-0.5)/total_n)^2) from i=start to i=end
-    double total = 0.0;
-    double n = double(total_n);
-
-    double x;
-    for (int i = start; i <= end; i++) {
-        x = (double(i) - 0.5) / n;
-        total += 1.0 / (1.0 + x*x);
+void print_array(int rank, int *array, int n)
+{
+    int i;
+    printf("On rank %d, array[] = [", rank);
+    for (i=0; i < n; i++)
+    {
+        if (i != 0) printf(",");
+        printf(" %d", array[i]);
     }
-
-    return total;
+    printf(" ]\n");
 }
 
 
 int main() {
-    // Aim is to calculate pi using a parallel algorithm
+    // Aim is to implement own equivalent to broadcast and scatter
 
     // Initialize MPI
     MPI_Init(NULL, NULL);
@@ -32,50 +27,11 @@ int main() {
     int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    cout.precision(10);  // Will want pi to many decimal places
-
-    // Calculate the partial sum attributed to this process
-    int sum_start = (rank * ACCURACY_N)/size + 1;
-    int sum_end = ((rank + 1) * ACCURACY_N)/size;
-    cout << "Hello from process " << rank << " of " << size << " I will be summing ";
-    cout << sum_start << " to " << sum_end << endl;
+    cout << "Hello from process " << rank << " of " << size << endl;
 
     // Start timing
     MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
     double tstart = MPI_Wtime(); // Fire the gun and start the clock
-    double pi; // For end result
-
-    // To get meaningful results, we will calculate pi NUM_TIMES_TO_COMPUTE_PI times
-    for (int pi_calc_num = 0; pi_calc_num < NUM_TIMES_TO_COMPUTE_PI; pi_calc_num++) {
-        // Partial sum for this process
-        double part_sum = partial_sum(sum_start, sum_end, ACCURACY_N);
-        //cout << "Process " << rank << " partial sum " << part_sum << endl;  // Output
-
-        //Calculate the final sum
-        double total_sum;
-        double received_sum;
-        MPI_Status status;
-        if (rank == 0) {  // Rank 0 is to do the final sum
-
-            // Add the partial sum from the others processes
-            total_sum = part_sum;
-            for (int received_num = 1; received_num < size; received_num++) {
-                // Use wildcard to receive from any source in any order, with the tag pi_calc_num
-                // to ensure no confusion between different pi calculations
-                MPI_Recv(&received_sum, 1, MPI_DOUBLE, MPI_ANY_SOURCE, pi_calc_num, MPI_COMM_WORLD, &status);
-                total_sum += received_sum;
-            }
-
-            // Calculate this pi, printing to 10 decimal places
-            pi = (4.0 / double(ACCURACY_N)) * total_sum;
-
-        } else {
-            MPI_Send(&part_sum, 1, MPI_DOUBLE, 0, pi_calc_num, MPI_COMM_WORLD);
-        }
-    }
-
-    // Output the final pi
-    if (rank == 0) {cout << "Final pi: " << pi << endl;}
 
     // Finish timing
     MPI_Barrier(MPI_COMM_WORLD); // Wait for everyone to finish
