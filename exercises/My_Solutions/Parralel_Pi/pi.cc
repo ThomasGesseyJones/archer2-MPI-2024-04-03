@@ -48,6 +48,7 @@ int main() {
     // Start timing
     MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
     double tstart = MPI_Wtime(); // Fire the gun and start the clock
+    double pi; // For end result
 
     // To get meaningful results, we will calculate pi NUM_TIMES_TO_COMPUTE_PI times
     for (int pi_calc_num = 0; pi_calc_num < NUM_TIMES_TO_COMPUTE_PI; pi_calc_num++) {
@@ -67,7 +68,7 @@ int main() {
             }
 
             // Calculate pi, printing to 10 decimal places
-            double pi = (4.0 / double(ACCURACY_N)) * total_sum;
+            pi = (4.0 / double(ACCURACY_N)) * total_sum;
 
         } else {
             MPI_Send(&part_sum, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
