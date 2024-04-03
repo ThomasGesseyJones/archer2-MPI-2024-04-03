@@ -400,3 +400,15 @@ Messages can only be received with the same communicator that they were sent wit
 don't accidentally communicate with each other. Could do this with tags but that is error-prone. Can use 
 MPI_Comm_split to split based on some condition, e.g., rank % 2. This can be useful for splitting into even and odd
 ranks.
+
+
+### Exercise 3: Broadcast and Scatter
+
+See linked exercises in README.md for details and `exercises/My_Solutions/Broadcast_and_Scatter` for my solution.
+
+
+### Exercise 4: Ping Pong
+
+See linked exercises in README.md for details and `exercises/My_Solutions/Ping_Pong` for my solution.
+
+
