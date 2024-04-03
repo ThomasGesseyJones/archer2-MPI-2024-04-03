@@ -4,7 +4,7 @@
 using namespace std;
 
 // Constants
-int ACCURACY_N = 840;  // Number of terms in the series e.g., the accuracy of the calculation
+int ACCURACY_N = 84000;  // Number of terms in the series e.g., the accuracy of the calculation
 int NUM_TIMES_TO_COMPUTE_PI = 10000;  // Number of times to compute pi
 
 double partial_sum(int start, int end, int total_n) {
