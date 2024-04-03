@@ -57,8 +57,8 @@ int main() {
         MPI_Status status;
         if (rank == 0) {  // Rank 0 is to do the final sum
             total_sum = part_sum;
-            for (int sender_rank = 1; sender_rank < size; sender_rank++) {
-                MPI_Recv(&received_sum, 1, MPI_DOUBLE, sender_rank, 0, MPI_COMM_WORLD, &status);
+            for (int received_num = 1; received_num < size; received_num++) {
+                MPI_Recv(&received_sum, 1, MPI_DOUBLE, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
                 total_sum += received_sum;
             }
 
