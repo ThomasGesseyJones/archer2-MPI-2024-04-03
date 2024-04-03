@@ -35,11 +35,6 @@ int main() {
     cout.precision(10);  // Will want pi to many decimal places
 
     // Calculate the partial sum attributed to this process
-    // Check that the number of terms in the series is divisible by the number of processes
-    if (ACCURACY_N % size != 0) {
-        cerr << "The number of terms in the series must be divisible by the number of processes" << endl;
-        return 1;
-    }
     int sum_start = (rank * ACCURACY_N)/size + 1;
     int sum_end = ((rank + 1) * ACCURACY_N)/size;
     cout << "Hello from process " << rank << " of " << size << " I will be summing ";
