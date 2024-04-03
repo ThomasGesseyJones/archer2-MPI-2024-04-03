@@ -63,8 +63,9 @@ int main() {
         return 0;
     }
 
-    // Calculate pi
+    // Calculate pi, printing to 10 decimal places
     double pi = (4.0 / double(ACCURACY_N)) * total_sum;
+    cout.precision(10);
     cout << "Pi is approximately " << pi << endl;
     MPI_Finalize();
     return 0;
