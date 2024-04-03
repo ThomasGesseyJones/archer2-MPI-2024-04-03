@@ -4,6 +4,9 @@
 using namespace std;
 
 // Constants
+ARRAY_SIZE = 12;  // Number of elements in the array
+
+// Utility function to print an array
 void print_array(int rank, int *array, int n)
 {
     int i;
@@ -29,14 +32,34 @@ int main() {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     cout << "Hello from process " << rank << " of " << size << endl;
 
+    // Initialize the array
+    int array[ARRAY_SIZE];
+    for (idx=0; idx < ARRAY_SIZE; idx++) {if (rank == 0) {array[idx] = idx}; else {array[idx] = -1};}
+
+    // Print the array
+    print_array(rank, array, ARRAY_SIZE);
+
+    // Manual broadcast
+    if (rank == 0){
+        for (int receiver=1; receiver < size; receiver++){
+            MPI_Ssend(array, ARRAY_SIZE, MPI_INT, receiver, 0, MPI_COMM_WORLD);
+        }
+    }
+    else {
+        MPI_Recv(array, ARRAY_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+
+    // Print the array again
+    print_array(rank, array, ARRAY_SIZE);
+
     // Start timing
-    MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
-    double tstart = MPI_Wtime(); // Fire the gun and start the clock
+    //MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
+    //double tstart = MPI_Wtime(); // Fire the gun and start the clock
 
     // Finish timing
-    MPI_Barrier(MPI_COMM_WORLD); // Wait for everyone to finish
-    double tstop = MPI_Wtime(); // Stop the clock
-    if (rank == 0) {cout << "Time taken: " << tstop - tstart << " seconds" << endl;}
+    //MPI_Barrier(MPI_COMM_WORLD); // Wait for everyone to finish
+    //double tstop = MPI_Wtime(); // Stop the clock
+    //if (rank == 0) {cout << "Time taken: " << tstop - tstart << " seconds" << endl;}
 
     MPI_Finalize();
     return 0;
