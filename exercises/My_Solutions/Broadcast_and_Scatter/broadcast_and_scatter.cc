@@ -34,7 +34,7 @@ int main() {
 
     // Initialize the array
     int array[ARRAY_SIZE];
-    for (int idx=0; idx < ARRAY_SIZE; idx++) {if (rank == 0) {array[idx] = idx}; else {array[idx] = -1};}
+    for (int idx=0; idx < ARRAY_SIZE; idx++) {if (rank == 0) {array[idx] = idx;} else {array[idx] = -1;}}
 
     // Print the array
     print_array(rank, array, ARRAY_SIZE);
