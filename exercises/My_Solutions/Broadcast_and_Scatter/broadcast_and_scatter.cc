@@ -52,6 +52,29 @@ int main() {
     // Print the array again
     print_array(rank, array, ARRAY_SIZE);
 
+    // Reset the arrays
+    for (int idx=0; idx < ARRAY_SIZE; idx++) {if (rank == 0) {array[idx] = idx;} else {array[idx] = -1;}}
+
+    // Manual scatter
+    int communicated_array[ARRAY_SIZE / size];
+    if (rank == 0){
+        for (int receiver=1; receiver < size; receiver++){
+            for (int idx=0; idx < ARRAY_SIZE / size; idx++) {
+                communicated_array[idx] = array[(receiver * ARRAY_SIZE) / size + idx];
+            }
+            MPI_Ssend(communicated_array, ARRAY_SIZE / size, MPI_INT, receiver, 0, MPI_COMM_WORLD);
+        }
+    }
+    else {
+        MPI_Recv(communicated_array, ARRAY_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for (int idx=0; idx < ARRAY_SIZE / size; idx++) {
+            array[(receiver * ARRAY_SIZE) / size + idx] = communicated_array[idx];
+        }
+    }
+
+    // Print the array again
+    print_array(rank, array, ARRAY_SIZE);
+
     // Start timing
     //MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
     //double tstart = MPI_Wtime(); // Fire the gun and start the clock
