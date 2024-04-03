@@ -324,3 +324,79 @@ MPI also has a timer.
 ### Exercise 2: Parallel Calculation of Pi
 
 See linked exercises in README.md for details and `exercises/My_Solutions/Parallel_Pi` for my solution.
+
+
+### MPI Modes, Tags, and Communicators
+
+Aim is to explain why asynchronous communication is not often used in MPI.
+
+#### Modes
+
+MPI_Ssend, synchronous send, will not return until the message has been delivered.
+
+MPI_Bsend, buffered send, will be asynchronous, returns before the message is delivered. System copies data into buffer 
+and sends it later on. No deadlock, or dead time, but the buffer does not come free and is finite! 
+
+MPI_Send, standard send, can be either of the above. Implementation dependent. Causes lots of confusion.
+
+For maximum efficiency MPI is not fault-tolerant and has little error checking. 
+
+Recv is always synchronous. 
+
+Bsend using a single large block of memory, made available to MPI via
+MPI_Buffer_attach. This is a fixed size, and if you exceed it, it will block. Bsend is awkward to use as a result as 
+whether the buffer is big enough is not always clear, and can depend on if one process is slow that particular day, 
+leading to irreplicable bugs :(
+
+MPI_Send tries to solve these problems, will normally be asynchronous like Bsend, but wil become synchronous like Ssend
+if buffer is full. MPI_Send can still cause deadlock if the buffer is full. So can still have irreplicable bugs, that
+are annoyingly system dependent.
+
+Useful to know a code that runs correctly with MPI_Send will always run correctly with MPI_Ssend, but not the other way
+though it is very rare, as you have to do something very specific to trigger it.
+
+General solution to this is to use non-blocking communication, which is like asynchronous communication but 
+does not use a buffer, so no deadlock. More tomorrow. 
+
+
+#### Checking for Messages
+
+Can probe for matching message using `MPI_Probe`. This will return the status of the message, but not the message
+itself. This can be useful if you need to know the size of the message before receiving it. 
+
+```c++
+MPI_Probe(source, tag, communicator, &status);
+MPI_Get_count(&status, MPI_INT, &count);
+int data[count];
+MPI_Recv(data, count, MPI_INT, source, tag, communicator, &status);
+```
+
+Careful with wildcards and this, as you may get a message from a different source or tag than you were expecting.
+So, you should also take the source and tag from the status object.
+
+
+#### Tags
+
+MPI tags are non-negative integers (special values are negative), only up to 32767 required to be supported.
+Systems may support more, but not guaranteed, so don't rely on it. 
+
+Tags not that commonly used, often set them to 0, or use MPI_ANY_TAG.
+
+
+#### Communicators
+
+MPI_COMM_WORLD is the most common communicator, but you can create your own. This can be useful for restricting
+communication to a subset of processes. Can often get away with just this. But hardcoding MPI_COMM_WORLD is bad 
+practice. Using a communicator variable is better for flexibility and readability. 
+```c++
+MPI_Comm my_comm;
+my_comm = MPI_COMM_WORLD;
+```
+
+MPI_COMM_SELF is a communicator that only includes the calling process. This can be useful for debugging, or for
+sending messages to yourself for caching.
+
+Messages can only be received with the same communicator that they were sent with. This is to allow isolated groups that
+don't accidentally communicate with each other. Could do this with tags but that is error-prone. Can use 
+MPI_Comm_split to split based on some condition, e.g., rank % 2. This can be useful for splitting into even and odd
+ranks.
