@@ -56,13 +56,17 @@ int main() {
         double received_sum;
         MPI_Status status;
         if (rank == 0) {  // Rank 0 is to do the final sum
+
+            // Add the partial sum from the others processes
             total_sum = part_sum;
             for (int received_num = 1; received_num < size; received_num++) {
+                // Use wildcard to receive from any source in any order, with the tag pi_calc_num
+                // to ensure no confusion between different pi calculations
                 MPI_Recv(&received_sum, 1, MPI_DOUBLE, MPI_ANY_SOURCE, pi_calc_num, MPI_COMM_WORLD, &status);
                 total_sum += received_sum;
             }
 
-            // Calculate pi, printing to 10 decimal places
+            // Calculate this pi, printing to 10 decimal places
             pi = (4.0 / double(ACCURACY_N)) * total_sum;
 
         } else {
