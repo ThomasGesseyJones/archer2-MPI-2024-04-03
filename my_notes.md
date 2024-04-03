@@ -240,4 +240,8 @@ Online documentation for MPI is a bit poor. MPI books are generally a better way
 
 ### Exercise 1: Hello World
 
+Print ordering between processes is not guaranteed, as there is a lot of buffering between print statements and
+actually reaching the terminal. 
+
+
 
