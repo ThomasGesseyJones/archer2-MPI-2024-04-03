@@ -34,8 +34,8 @@ int main() {
     cout << "Hello from process " << rank << " of " << size << endl;
 
     // Calculate the partial sum
-    double partial_sum = partial_sum(1, ACCURACY_N + 1, ACCURACY_N);
-    double pi = (4.0 / double(ACCURACY_N)) * partial_sum;
+    double part_sum = partial_sum(1, ACCURACY_N + 1, ACCURACY_N);
+    double pi = (4.0 / double(ACCURACY_N)) * part_sum;
 
     // Output
     cout << "Process " << rank << " calculated pi as " << pi << endl;
