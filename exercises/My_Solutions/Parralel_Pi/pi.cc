@@ -33,7 +33,6 @@ int main() {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     cout.precision(10);  // Will want pi to many decimal places
-    cout << "Hello from process " << rank << " of " << size << endl;
 
     // Calculate the partial sum attributed to this process
     // Check that the number of terms in the series is divisible by the number of processes
@@ -41,9 +40,10 @@ int main() {
         cerr << "The number of terms in the series must be divisible by the number of processes" << endl;
         return 1;
     }
-    int terms_per_rank = ACCURACY_N / size;
-    int sum_start = rank * terms_per_rank + 1;
-    int sum_end = (rank + 1) * terms_per_rank;
+    int sum_start = (rank * ACCURACY_N)/size + 1;
+    int sum_end = ((rank + 1) * ACCURACY_N)/size;
+    cout << "Hello from process " << rank << " of " << size << " I will be summing ";
+    cout << sum_start << " to " << sum_end << endl;
 
     // Start timing
     MPI_Barrier(MPI_COMM_WORLD); // Line up at the start line
