@@ -24,6 +24,36 @@ Getting time on ARCHER2, can apply for time, or take the ARCHER2 Driving Test, f
 DIRAC.
 
 
-### Message Passing Programming
+### Message Passing Programming (with MPI)
 
+Main aim is to understand the message-passing model for parallel programming and write parallel programs using MPI
+in C++.
 
+MPI is the most important piece of software for parallel programming, and is a standard for message-passing programming
+for supercomputers across the world. MPI was designed 30+ years, very successful, but quite basic and low-level.
+
+Can break programming down into, fundamental concepts (e.g., arrays), languages (e.g., C++), and 
+implementation (e.g., gcc). MPP has the same divide, with fundamental concepts (e.g., processes), 
+languages (e.g., MPI), and implementation (e.g., OpenMPI). Though in practice MPI has outcompeted the
+other languages for message-passing programming so only one worth learning. Should aim to still think in concepts.
+
+As a **warning** OpenMP is not the same as OpenMPI, OpenMP is for shared memory programming, OpenMPI is for distributed
+memory programming. We will not talk about the former. 
+
+Modern OSs, have many tasks, but they are ring-fenced from each other, so can't access each other. This is 
+intentional to avoid catastrophic failure. MPI is used when we want lots of processes to co-operate on the same
+task and thus cannot be ring-fenced from each other. Threads can share memory, but processes cannot. MPI deals with
+the communication between processes. At the most basic level this is done by sending messages between processes via
+a library call. Could have a fully parallelized program, but none have taken off.
+
+Parallel paradigm:
+* Multiple processes (numbered), each with their own memory space.
+* Processes communicate by sending messages via MPI to a communication network.
+* Processes can be on the same node or different nodes.
+* We don't care how the communication network works, just that it does, MPI deals with this.
+* Typically, in a supercomputer, the memory is also distributed across the nodes, so the communication network is
+  also the memory network.
+* Note each compute node can have multiple processes, but MPI hides this from you.
+
+Process communication in MPI is a two-ended process, both the sender needs to send, and the receiver needs to receive.
+This is analogous to emails.
