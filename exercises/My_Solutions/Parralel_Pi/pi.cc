@@ -33,12 +33,24 @@ int main() {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     cout << "Hello from process " << rank << " of " << size << endl;
 
-    // Calculate the partial sum
-    double part_sum = partial_sum(1, ACCURACY_N + 1, ACCURACY_N);
-    double pi = (4.0 / double(ACCURACY_N)) * part_sum;
+    // Calculate the partial sum attributed to this process
+    // Check that the number of terms in the series is divisible by the number of processes
+    if (ACCURACY_N % size != 0) {
+        cerr << "The number of terms in the series must be divisible by the number of processes" << endl;
+        return 1;
+    }
+    int terms_per_rank = ACCURACY_N / size;
+    int sum_start = rank * terms_per_rank + 1;
+    int sum_end = (rank + 1) * terms_per_rank;
+
+    double part_sum = partial_sum(sum_start, sum_end, ACCURACY_N);
+
+
+
+    //double pi = (4.0 / double(ACCURACY_N)) * part_sum;
 
     // Output
-    cout << "Process " << rank << " calculated pi as " << pi << endl;
+    cout << "Process " << rank << " partial sum " << part_sum << endl;
     return 0;
 }
 
