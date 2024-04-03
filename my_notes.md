@@ -44,7 +44,9 @@ Modern OSs, have many tasks, but they are ring-fenced from each other, so can't 
 intentional to avoid catastrophic failure. MPI is used when we want lots of processes to co-operate on the same
 task and thus cannot be ring-fenced from each other. Threads can share memory, but processes cannot. MPI deals with
 the communication between processes. At the most basic level this is done by sending messages between processes via
-a library call. Could have a fully parallelized program, but none have taken off.
+a library call. Could have a fully parallelized program, but none have taken off. A process can have multiple threads,
+handled separately, but MPI doesn't care about this. Calling MPI from threads is not a good idea, get race conditions.
+MPI is just the communication between processes, so also doesn't care about hardware, CPUs, GPUs, TPUs, etc.
 
 Parallel paradigm:
 * Multiple processes (numbered), each with their own memory space.
@@ -55,5 +57,46 @@ Parallel paradigm:
   also the memory network.
 * Note each compute node can have multiple processes, but MPI hides this from you.
 
-Process communication in MPI is a two-ended process, both the sender needs to send, and the receiver needs to receive.
-This is analogous to emails.
+Process communication in MPI is a two-ended process, both the sender needs to `send`, and the receiver needs to 
+`receive`. This is analogous to emails. A common trip-up is variables can be different between processes, this makes 
+debugging a lot harder.
+
+MPI uses Single Program Multiple Data (SPMD) model, where all processes run the same program, but can have different
+data. This is the most common model for parallel programming. Each process has a unique ID to allow the
+behavior to be different between processes (otherwise what's the point of having multiple processes).
+
+Message transfers a number of data items of a certain type from the memory of one process to the memory of another.
+Message sending can be synchronous or asynchronous. Synchronous is blocking, the sender waits until the receiver has
+received the message. Asynchronous is non-blocking, the sender can continue without waiting for the receiver.
+You can think of this like phone call, and email, respectively. But, warning synchronous blocking has no time limit, 
+so you can wait forever and end up in a deadlock where every process is waiting for something. It is up to you to
+match the sends and receives, MPI will not do this for you.
+
+Point-to-point communication is one sender to one receiver, but you can have multiple senders and receivers.
+In many cases this is far more efficient/desirable. Called collective communication, e.g., broadcast, scatter, gather,
+reduce, etc. These are more efficient as they can be optimized for the network, and can be done in parallel. Don't
+try to do these yourself, use the MPI library calls. Some examples:
+* `Barrier` is used for global synchronization, all processes wait
+until all processes have reached the barrier. Useful for timing. 
+* `Broadcast` is used to send the same data to all processes. Often used at the start to send the same data to all
+processes.
+* `Scatter` is used to send different data to each process. Often used to distribute data to all processes. Scattering
+inputs for different processes to work on.
+* `Gather` is the opposite of scatter, collects data from all processes to one process. Often used to collect results
+and then decide what to do with them.
+* `Reduce` is used to combine data from all processes to one process. Often used to combine results from all processes
+to get a final result. Options include sum, product, max, min, etc. Sum is probably the most common.
+
+#### Summary:
+
+Outline of MPI program (think of it as a programming model distinct from sequential programming):
+* Write a single piece of source code with private data, and explicit communications
+* Compile it with a standard compiler, and link with MPI library (both open source and vendor exist)
+* Run multiple copies of the executable (SPMD) on different nodes/machines (private data, variables and position in 
+program)
+* Running usually done via a launcher program
+
+Issues:
+* Send/receives don't match (deadlock)
+* Possible to write very complicated programs that are hard to debug (often not needed)
+* Use collective communications where possible for efficiency (read the docs!)
