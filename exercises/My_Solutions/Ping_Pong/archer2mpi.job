@@ -15,15 +15,15 @@
 
 ## The commands below select the short queue for small jobs
 ## For long or large jobs, use --qos=standard and omit the reservation
-##SBATCH --qos=short
-##SBATCH --reservation=shortqos
+#SBATCH --qos=short
+#SBATCH --reservation=shortqos
 
 # The commands below select the reserved queue for the ARCHER2 MPI course
 # from 3-4 Apr 2024
 # Outside of course hours use short or standard jobs as described above
-#SBATCH --qos=reservation
+##SBATCH --qos=reservation
 #For Wed 3rd
-#SBATCH --reservation=ta149_1200807
+##SBATCH --reservation=ta149_1200807
 
 ##For Thu 4th
 ##SBATCH --reservation=ta149_1200811
