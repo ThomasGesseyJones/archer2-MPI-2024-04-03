@@ -4,7 +4,7 @@
 using namespace std;
 
 // Constants
-ACCURACY_N = 840;  // Number of terms in the series e.g., the accuracy of the calculation
+int ACCURACY_N = 840;  // Number of terms in the series e.g., the accuracy of the calculation
 
 double partial_sum(int start, int end, int total_n) {
     // Calculate the partial sum of 1/(1 + ((i-0.5)/total_n)^2) from i=start to i=end
