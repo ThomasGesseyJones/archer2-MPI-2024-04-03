@@ -44,13 +44,29 @@ int main() {
     int sum_end = (rank + 1) * terms_per_rank;
 
     double part_sum = partial_sum(sum_start, sum_end, ACCURACY_N);
+    cout << "Process " << rank << " partial sum " << part_sum << endl;  // Output
 
+    //Calculate the final sum
+    double total_sum;
+    double received_sum;
+    MPI_STATUS status;
+    if (rank == 0) {  // Rank 0 is to do the final sum
+        total_sum = part_sum;
+        for (int sender_rank=1; sender_rank<size; sender_rank++) {
+            MPI_Recv(&received_sum, 1, MPI_DOUBLE, sender_rank, 0, MPI_COMM_WORLD, &status);
+            total_sum += received_sum;
+        }
+    }
+    else {
+        MPI_Send(&part_sum, 1, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+        MPI_Finalize();
+        return 0;
+    }
 
-
-    //double pi = (4.0 / double(ACCURACY_N)) * part_sum;
-
-    // Output
-    cout << "Process " << rank << " partial sum " << part_sum << endl;
+    // Calculate pi
+    double pi = (4.0 / double(ACCURACY_N)) * total_sum;
+    cout << "Pi is approximately " << pi << endl;
+    MPI_Finalize();
     return 0;
 }
 
