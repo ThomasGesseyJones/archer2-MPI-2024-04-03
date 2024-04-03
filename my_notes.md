@@ -322,3 +322,5 @@ MPI also has a timer.
 
 
 ### Exercise 2: Parallel Calculation of Pi
+
+See linked exercises in README.md for details and `exercises/My_Solutions/Parallel_Pi` for my solution.
