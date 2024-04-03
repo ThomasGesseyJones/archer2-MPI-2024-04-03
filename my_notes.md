@@ -100,3 +100,21 @@ Issues:
 * Send/receives don't match (deadlock)
 * Possible to write very complicated programs that are hard to debug (often not needed)
 * Use collective communications where possible for efficiency (read the docs!)
+
+
+### Practical Example: Parallel Traffic Modelling
+
+Want to predict traffic flow. Build a computer model, lots of people spend time doing this. 
+
+We are going to use a very simple model. 1D cellular automaton, each cell is a road segment, and each cell can have
+a car in it. The model is updated in discrete time steps, and the cars move according to simple rules:
+* If a cell is occupied, and the cell in front is empty, the car moves forward.
+* If a cell is occupied, and the cell in front is also occupied, the car stays where it is.
+* Use PBC, implemented using ghost or halo cells at each end of the road.
+
+Want to calculate the average speed of the cars and density, as can see even in this simply model congestion can occur.
+Below 50% get 1 average speed, above 50% get decreasing average speed, and at 100% get 0 average speed. A surprisingly
+well studied cellular automaton model [https://en.wikipedia.org/wiki/Rule_184](https://en.wikipedia.org/wiki/Rule_184).
+
+Going to split the problem into pieces and give them each to a different process for distributed computing. 
+Problem has standard structure of calculation phase and communication phase alternating.
