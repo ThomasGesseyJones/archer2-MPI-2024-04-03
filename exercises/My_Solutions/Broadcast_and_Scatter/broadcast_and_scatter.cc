@@ -4,7 +4,7 @@
 using namespace std;
 
 // Constants
-ARRAY_SIZE = 12;  // Number of elements in the array
+int ARRAY_SIZE = 12;  // Number of elements in the array
 
 // Utility function to print an array
 void print_array(int rank, int *array, int n)
