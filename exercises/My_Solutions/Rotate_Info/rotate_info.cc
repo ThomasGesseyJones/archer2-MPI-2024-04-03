@@ -25,8 +25,6 @@ int main() {
     if (ahead == size) {ahead = 0;}
     MPI_Request send_request;
     MPI_Request recv_request;
-    MPI_Request requests[2] = {send_request, recv_request};
-    MPI_Status statuses[2];
 
     int to_pass = rank;
     int total_so_far = to_pass;
@@ -39,6 +37,8 @@ int main() {
         MPI_Irecv(&received, 1, MPI_INT, behind, 0, comm, &recv_request);
 
         // Waits for them all to finish
+        MPI_Request requests[2] = {send_request, recv_request};
+        MPI_Status statuses[2];
         MPI_Waitall(2, requests, statuses);
 
         // Update the total
