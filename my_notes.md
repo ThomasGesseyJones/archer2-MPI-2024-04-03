@@ -406,9 +406,35 @@ ranks.
 
 See linked exercises in README.md for details and `exercises/My_Solutions/Broadcast_and_Scatter` for my solution.
 
+## Day 2 (Thursday, 2024-04-04)
 
 ### Exercise 4: Ping Pong
 
 See linked exercises in README.md for details and `exercises/My_Solutions/Ping_Pong` for my solution.
 
+Calculated timings:
 
+| Size (bytes) | # Iterations | Total time (s) | Time per message (s) | Bandwidth (MB/s)   |
+|:-------------|:-------------|:---------------|:---------------------|:-------------------|
+| 1200         | 10000000     | 12.34          | 1.234E-06            | 972.447325769854   |
+| 4000         | 3000000      | 5.24           | 1.74666666666667E-06 | 2290.07633587786   |
+| 12000        | 1000000      | 2.87           | 2.87E-06             | 4181.18466898955   |
+| 40000        | 300000       | 2.11           | 7.03333333333333E-06 | 5687.20379146919   |
+| 120000       | 100000       | 1.64           | 1.64E-05             | 7317.07317073171   |
+| 400000       | 100000       | 4.54           | 4.54E-05             | 8810.57268722467   |
+| 1200000      | 10000        | 1.27           | 0.000127             | 9448.81889763779   |
+| 4000000      | 10000        | 5.96           | 0.000596             | 6711.40939597315   |
+| 12000000     | 1000         | 3.27           | 0.00327              | 3669.7247706422    |
+| 40000000     | 1000         | 9.25           | 0.00925              | 4324.32432432432   |
+
+From the above data we can calculate the latency, the time per message even for vanishingly
+small size:
+
+![Latency](exercises/My_Solutions/Ping_Pong/latency.png)
+
+Finding that the latency is around 1.0 microseconds.
+
+Meanwhile the bandwidth initially increases with message size, but then peaks and slowly decreases. 
+This is due to the inefficiency of sending small messages, and the overhead of sending large messages.
+
+![Bandwidth](exercises/My_Solutions/Ping_Pong/bandwidth.png)
