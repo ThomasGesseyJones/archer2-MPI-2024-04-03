@@ -602,3 +602,100 @@ Other collective operations include:
 * `MPI_Allreduce`: Everyone knows answer. Same syntax but just get rid of the root argument. Avoids roundings errors.
 * `MPI_Reduce_scatter`: Reduce then scatter
 * `MPI_Scan`: Like reduce, but each process gets the result of the reduction up to that point. E.g., 0, 0+1, 0+1+2, etc.
+
+
+### Exercise 6: Collective Communication
+
+See linked exercises in README.md for details and `exercises/My_Solutions/Collective_Communication` for my solution.
+
+The resulting timings of the `MPI_Allreduce` method versus the rotating ring method are as follows:
+
+| Processors | Iterations | Rotate Info (s) | Reduce Time (s) |
+|------------|------------|-----------------|-----------------|
+| 3          | 100000     | 0.158817        | 0.0499179       |
+| 9          | 100000     | 1.49768         | 0.175197        |
+| 27         | 100000     | 4.49493         | 0.233942        |
+| 81         | 100000     | 21.6849         | 0.459456        |
+| 243        | 100000     | 123.012         | 0.897147        |
+
+The resulting scaling of the too methods can be seen in the following plot:
+
+![Scaling](exercises/My_Solutions/Collective/total_timings.png)
+
+From which we see the all reduce method is both much faster and scales better than the rotating ring method.
+The time scaling with processes of each method are found to be as the 
+1.5 and 0.6th power respectively. So the all reduce method scales significantly better than the rotating ring method.
+
+
+### Virtual Topologies
+
+Convenient process naming to simply communication pattern and match mental model of the problem.
+Makes code more readable and maintainable. In principle, MPI can also optimize for these topologies, but in practice
+this is rarely significant.
+
+We use a virtual topology, by creating a new communicator, which MPI provides mapping functions. Mapping
+function compute processor ranks, based on the topology naming scheme. We shall consider
+Cartesian topologies, which are the most common, and regular structured, but this is not a requirement,
+you can have irregular graph topologies like a tree.
+
+For a Cartesian topology also need to define boundary conditions, e.g., a 2D finite cylinder
+is not the same as a sphere. Hence, the name topology. Processors are identified by Cartesian
+coordinates. 
+
+Optionally MPI can reorder the ranks, to optimize communication. This is not always a good idea, as it can
+make debugging harder. Generally, this is done by minimizing inter-node communication. This is rarely used,
+and often doesn't work well, but it is there if you need it.
+
+To create a Cartesian topology, you need to define the number of dimensions, and the size of each dimension.
+```c++
+int MPI_Cart_create(MPI_Comm communicator, int ndims, int *dims, int *periods, int reorder, MPI_Comm *new_communicator);
+```
+where `communicator` is the communicator to create the topology in, `ndims` is the number of dimensions, `dims` is the
+size of each dimension, `periods` is the periodicity of each dimension, `reorder` is whether to reorder the ranks, and
+`new_communicator` is the new communicator. `dims` is an array of integers of length `ndims`, `periods` is an array of
+booleans of length `ndims`, and `new_communicator` is a pointer to a communicator. `periods` is an array of booleans
+that defines if the topology is periodic in each dimension. This is useful for things like a 2D grid, where the top
+row is connected to the bottom row, and the left column is connected to the right column. `reorder` is a boolean that
+defines if the ranks should be reordered to optimize communication. 
+
+There is a helper function to suggest dims to create given a number of nodes and
+the number of dimensions. This is `MPI_Dims_create`. This is useful for creating a balanced grid.
+```c++
+int MPI_Dims_create(int nnodes, int ndims, int *dims);
+```
+where `nnodes` is the number of nodes, `ndims` is the number of dimensions, and `dims` is the size of each dimension.
+`dims` is an array of integers of length `ndims`, and acts to constrain the number of nodes in each dimension.
+It is 0 if it is not constrained and the number of nodes in that dimension if it is constrained.
+
+To get the Cartesian coordinates of a process, you can use `MPI_Cart_coords`.
+```c++
+int MPI_Cart_coords(MPI_Comm communicator, int rank, int maxdims, int *coords);
+```
+where `communicator` is the communicator, `rank` is the rank of the process, `maxdims` is the maximum number of dimensions,
+
+To get the rank of a process from its Cartesian coordinates, you can use `MPI_Cart_rank`.
+```c++
+int MPI_Cart_rank(MPI_Comm communicator, int *coords, int *rank);
+```
+where `communicator` is the communicator, `coords` is the Cartesian coordinates, and `rank` is the rank of the process.
+
+To get the neighbour in a certain direction, you can use `MPI_Cart_shift`.
+```c++
+int MPI_Cart_shift(MPI_Comm communicator, int direction, int disp, int *source, int *dest);
+```
+where `communicator` is the communicator, `direction` is the direction to shift in, `disp` is the distance to shift,
+`source` is the rank of the source process, and `dest` is the rank of the destination process. `direction` is the
+dimension to shift in, `disp` is the distance to shift, and `source` and `dest` are the ranks of the source and
+destination processes. This is useful for neighbour communication. `source` is not your rank
+but the rank of the process that is sending you data if communicating in the direction of the shift. 
+
+Non-existent neighbours are returned as `MPI_PROC_NULL`. This is a special value that is not a valid rank, and
+can be used to check if a neighbour exists. Also allows you to handle boundary conditions in a simple way
+by sending to the non-existent neighbour.
+
+Can partition the Cartesian grid into sub-grids, and create a new communicator for each sub-grid. This can be
+useful for parallelize a problem that is naturally divided into sub-problems. Each slice of the grid can then
+perform its own collective communications. 
+
+
+
