@@ -5,8 +5,6 @@ using namespace std;
 
 
 int main() {
-    // Aim is to calculate pi using a parallel algorithm
-
     // Initialize MPI
     MPI_Init(NULL, NULL);
     MPI_Comm comm;
