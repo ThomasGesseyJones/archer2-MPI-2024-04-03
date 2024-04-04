@@ -697,5 +697,51 @@ Can partition the Cartesian grid into sub-grids, and create a new communicator f
 useful for parallelize a problem that is naturally divided into sub-problems. Each slice of the grid can then
 perform its own collective communications. 
 
+There are more powerful features, so if you find yourself doing something complex, look it up.
+There might be a standard way to do it.
+
+
+### Derived Data Types
+
+We have already seen the MPI basic types. There are also derived types like vector, structs and others.
+
+These can be used to send non-contiguous data, like a column of a 2D array or a structure. 
+
+Can define new MPI types, that once registered that can then be used like the basic types.
+You need to register an appropriate `MPI_Op` if you want to use the type in a collective operation
+like `MPI_Reduce`.
+
+The types are defined as a list of basic types with displacements in bytes. 
+
+The simplest derived data type is a contiguous block of data, which is just a block of data of the same type. 
+```c++
+int MPI_Type_contiguous(int count, MPI_Datatype oldtype, MPI_Datatype *newtype);
+```
+where `count` is the number of basic data types, `oldtype` is the basic data type, and `newtype` is the new data type.
+Think 3D coordinates, or a row of a 2D array. Could do it otherway's but nice to have a standard way.
+These are also useful as intermediate types for more complex types.
+
+Once created you have to commit a type, this is to allow for optimization and to inform MPI of what it could
+see. 
+```c++
+int MPI_Type_commit(MPI_Datatype *datatype);
+```
+
+Vector data types are normally more useful. They are defined by a count, number of blocks, stride the distance between
+blocks, and the block length. This is because it corresponds to subsections of a 2D array, a common problem.
+Array mapping in C and Fortran is different. This is the cause of a lot of confusion.
+```c++
+int MPI_Type_vector(int count, int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype *newtype);
+```
+where `count` is the number of blocks, `blocklength` is the number of basic data types in each block, `stride` is the
+distance between the start of each block in multiples of the basic data type, `oldtype` is the basic data type, and
+`newtype` is the new data type. This is useful for sending a column of a 2D array.
+
+Note MPI avoids talking about bytes to maintain portability.
+
+Structures are a pain as you need to know offsets which can be compiler dependent.
+So you have to extract those at runtime. 
+
+
 
 
