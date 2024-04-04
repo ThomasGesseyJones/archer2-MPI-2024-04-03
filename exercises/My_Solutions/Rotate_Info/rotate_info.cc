@@ -26,7 +26,7 @@ int main() {
     MPI_Request send_request;
     MPI_Request recv_request;
 
-    int to_pass = rank;
+    int to_pass = (rank + 1)*(rank + 1); // Harder calculation
     int total_so_far = to_pass;
     int received;
 
