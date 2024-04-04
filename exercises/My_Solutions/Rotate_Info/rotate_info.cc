@@ -33,7 +33,7 @@ int main() {
     int received;
 
     // Communication Loop
-    for {int communication_step=0; communication_step<size-1; communication_step++}{
+    for (int communication_step=0; communication_step<size-1; communication_step++){
         // Non-blocking send to ahead and receive from behind
         MPI_Issend(to_pass, 1, MPI_INT, ahead, 0, comm, send_request);
         MPI_Irecv(received, 1, MPI_INT, behind, 0, comm, recv_request);
