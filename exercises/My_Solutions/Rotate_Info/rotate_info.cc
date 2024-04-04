@@ -5,7 +5,7 @@ using namespace std;
 
 
 //Constants
-const int NUM_LOOPS = 100000
+const int NUM_LOOPS = 100000;
 
 int main() {
     // Aim is to calculate pi using a parallel algorithm
