@@ -513,3 +513,92 @@ but breaks down horribly in an unstructured problem.
 ### Exercise 5: Rotating Information Around a Ring
 
 See linked exercises in README.md for details and `exercises/My_Solutions/Rotate_Info` for my solution.
+
+
+General advice is to wait as long as you can before waiting for non-blocking operations. This is a good way to 
+give MPI as much time as possible to make the communication. Reducing waiting time. 
+
+
+### Collective Communication
+
+Implementation of complex collective communication patterns that are commonly used in parallel programming.
+
+Call by all processes in a communicator, all processes must call the same function. They can have different
+roles in the collective (e.g., broadcast), but they must all call the function. Synchronisation may or
+may not occur, but can treat like they do as they will if needed. Can often think about there being a Barrier at the 
+start and end, no need to add these yourself.
+
+Collection operations are blocking (but there are non-blocking versions that are not commonly used). Do not
+support tags as all participating together. Receive buffers, must be exactly the right size, unlike point-to-point 
+communication. This is to avoid the checking overhead when have lots and lots of processes.
+
+Barrier synchronisation. Rarely needed for correctness, but often needed for timing. 
+```c++
+int MPI_Barrier(MPI_Comm communicator);
+```
+
+Broadcast, send data from one process to all processes. 
+```c++
+int MPI_Bcast(void *buf, int count, MPI_Datatype datatype, int root, MPI_Comm communicator);
+```
+where `buf` is the data to be sent, `count` is the number of data items, `datatype` is the type of the data, `root` is
+the rank of the process that is sending the data, and `communicator` is the communicator. All processes must call this
+function, but only the root process needs to pass data. The rest will receive the data into their buffer. We do this
+rather than point-to-point communication as it is optimized for the network, and can be done in parallel. 
+Can also use specialized hardware you don't have access to.  Lots of  work has gone into making this efficient, so 
+don't try to do it yourself. A good implementation will scale as  log the number of processes, a bad one will scale as 
+the number of processes. 
+
+Scatter, like broadcast but sends different data to each process. 
+```c++
+int MPI_Scatter(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm communicator);
+```
+where `sendbuf` is the data to be sent, `sendcount` is the number of data items to send, `sendtype` is the type of the
+data to send, `recvbuf` is the buffer to receive the data into, `recvcount` is the number of data items to receive,
+`recvtype` is the type of the data to receive, `root` is the rank of the process that is sending the data, and
+`communicator` is the communicator. The root process sends the data, and the other processes receive the data into
+their buffer. `sendcount` and `recvcount` must be the same (unless the types differ, but that is rare), this is how many 
+data each process will receive. The size of the original data is set implicitly by the size of the communicator and 
+`recvcount`. It is a bit subtle, so be careful. `sendbuf` is only used by the root process, the other processes ignore 
+it, passing `NULL` is fine.
+
+The inverse of scatter is gather, where each process sends data to the root process. 
+```c++
+int MPI_Gather(void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm communicator);
+```
+where `sendbuf` is the data to be sent, `sendcount` is the number of data items to send, `sendtype` is the type of the
+data to send, `recvbuf` is the buffer to receive the data into, `recvcount` is the number of data items to receive,
+`recvtype` is the type of the data to receive, `root` is the rank of the process that is receiving the data, and
+`communicator` is the communicator. The root process receives the data, and the other processes send the data from
+their buffer. `sendcount` and `recvcount` must be the same (unless the types differ, but that is rare), this is how many
+data each process will send. The size of the original data is set implicitly by the size of the communicator and
+`sendcount`. It is a bit subtle, so be careful. `recvbuf` is only used by the root process, the other processes ignore it,
+passing `NULL` is fine.
+
+There are more general routines for gather and scatter, that can transfer none fixed amount of data, and the data
+does not need to be contiguous in memory. These are `MPI_Gatherv` and `MPI_Scatterv`. These are more complex, but
+can be more efficient. Derived data types can be used to do even more general things like 3D arrays, but these are
+quite complex see later.
+
+Reduce, combines data from all processes to one process. It can sum, multiply, find the maximum, minimum, etc.
+Even do user-defined operations. Predefind operations are `MPI_SUM`, `MPI_PROD`, `MPI_MAX`, `MPI_MIN`, `MPI_LAND`,
+`MPI_BAND`, `MPI_LOR`, `MPI_BOR`, `MPI_LXOR`, `MPI_BXOR`. L, B, and X are logical, bitwise, and exclusive or. Can
+also do maximum with location, and minimum with location. Sum, is the most common. 
+```c++
+int MPI_Reduce(void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op operation, int root, MPI_Comm communicator);
+```
+where `sendbuf` is the data to be sent, `recvbuf` is the buffer to receive the data into, `count` is the number of data
+items, `datatype` is the type of the data, `operation` is the operation to perform, `root` is the rank of the process
+that is receiving the data, and `communicator` is the communicator. The root process receives the data, and the other
+processes send the data from their buffer. `sendbuf` is only used by the other processes, the root process ignores it,
+passing `NULL` is fine. `recvbuf` is only used by the root process, the other processes ignore it, passing `NULL` is 
+fine. Operations are applied elementwise, so the data must be the same size.
+
+User defined reduction operators are rarely needed. But can be useful for complex operations. Look it up if you
+need it. Operations need not commute, but they must be associative. MPI should be told if it commutes though, as it
+can optimize for this.
+
+Other collective operations include:
+* `MPI_Allreduce`: Everyone knows answer. Same syntax but just get rid of the root argument. Avoids roundings errors.
+* `MPI_Reduce_scatter`: Reduce then scatter
+* `MPI_Scan`: Like reduce, but each process gets the result of the reduction up to that point. E.g., 0, 0+1, 0+1+2, etc.
