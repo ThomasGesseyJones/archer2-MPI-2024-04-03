@@ -29,8 +29,7 @@ int main() {
     MPI_Request send_request;
     MPI_Request recv_request;
 
-    int to_pass = (rank + 1) * (rank + 1); // Harder calculation
-    int total_so_far = to_pass;
+    int total_so_far;
     int received;
 
 
@@ -39,6 +38,10 @@ int main() {
     double tstart = MPI_Wtime(); // Fire the gun and start the clock
 
     for (int loop_idx=0; loop_idx<NUM_LOOPS; loop_idx++) {
+        // Start with value derived from tank
+        int to_pass = (rank + 1) * (rank + 1); // Harder calculation
+        total_so_far = to_pass;
+
         // Communication Loop
         for (int communication_step = 0; communication_step < size - 1; communication_step++) {
             // Non-blocking send to ahead and receive from behind
