@@ -438,3 +438,74 @@ Meanwhile the bandwidth initially increases with message size, but then peaks an
 This is due to the inefficiency of sending small messages, and the overhead of sending large messages.
 
 ![Bandwidth](exercises/My_Solutions/Ping_Pong/bandwidth.png)
+
+
+
+### Non-blocking Communication
+
+Deadlock can occur if you want to pass messages in a ring, as each process is waiting for the next process to receive
+the message. This can be solved by using non-blocking communication.
+
+The mode of a communication determines when its constituent operations complete, i.e., assynchronous, or synchronous.
+The form of an operation determines when its constituent operations return, i.e., blocking, or non-blocking.
+Blocking operations wait to return. 
+Non-blocking operations return immediately, but the operation is not complete until the request is completed.
+This allows the sub-program to continue to perform other work. 
+At some later time the sub-program can test or wait for the completion of the non-blocking operation.
+
+In practice, this is used to issue multiple overlapping communications, and then wait for them all to complete.
+A good analogy is using a postal service, you send packages, and you can do other things while they are in transit,
+but you are given a tracking number you can use to check when they arrive.
+All non-blocking operations should have matching waits, or tests, to ensure they are completed. 
+Some systems cannot free resources until the wait has been called, so you can introduce memory leaks if you don't
+wait for the completion of the non-blocking operation.
+
+Non-blocking operations are not the same as sequential subroutine calls as the operation continues after the call
+has returned. You thus can introduce race conditions, so be careful.
+
+Note there is no copy taken in a non-blocking operation. So do not change the data until you are sure the operation
+has completed. Otherwise, you can get fun bugs.
+
+You have to manually keep track of if MPI request is send or receive, as MPI does not do this for you. 
+```c++
+int MPI_Issend(void *buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm communicator, MPI_Request *request);
+...
+int MPI_Wait(MPI_Request *request, MPI_Status *status);
+```
+The I stands for immediate or initialized, as the request is initialized immediately but not completed.
+```c++
+int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source, int tag, MPI_Comm communicator, MPI_Request *request);
+...
+int MPI_Wait(MPI_Request *request, MPI_Status *status);
+```
+Note Irecv, does not have a status object, as you don't know the size of the message until it is received.
+This is why Status is now in the wait function.
+
+Can mix blocking and non-blocking send and receives. Non-blocking sends can use any mode, synchronous, buffered, or
+standard. These are done via `MPI_ISend`, `MPI_IBsend`, and `MPI_ISsend`. In practice, `MPI_IBsend` is basically
+useless. `MPI_ISsend` is generally recommended as it avoids the buffer problem of `MPI_ISend`.
+
+There is also a test function, `MPI_Test`, that can be used to check if a non-blocking operation has completed. 
+```c++
+int MPI_Test(MPI_Request *request, int *flag, MPI_Status *status);
+```
+These just returns a boolean flag, so you can use it in a loop to check if all non-blocking operations have completed.
+Useful for controller worker communication. 
+
+In practice, what you tend to do is send non blocking communication, do as much work as you can without the
+communication, then wait for the communication to complete. This is a good way to hide latency.
+
+Synchronous mode affects what completion means. After a wait on `MPI_Issend`, you know the routine has
+completed, the message has been sent, you can overwrite the send buffer. After a wait on MPI_Isend, you know the
+routine has completed, the message may have sent, or may be in the MPI buffer. In either you can overwrite the
+send buffer. You must not access send or receive buffers until communications are complete. Do not write to send buffer 
+until after a wait on `Issend`/`Isend`, and do not read from receive buffer until after a wait on `Irecv`.
+
+Routines exist in MPI to test multiple non-blocking operations at once. Syntax gets a bit complex, but can be useful
+for large numbers of non-blocking operations. These include `MPI_Waitsome`, `MPI_Testsome`, `MPI_Waitall`, 
+`MPI_Testall`, `MPI_Waitany`, and `MPI_Testany`. Using these and non-blocking communications is often the most
+efficient way to use MPI.
+
+There is a routine called `MPI_Sendrecv`, that combines a send and a receive into a single call. This can be useful
+to avoid deadlocks, but is not as generally useful as non-blocking communication. Works ok in a structured problem,
+but breaks down horribly in an unstructured problem.
