@@ -509,3 +509,7 @@ efficient way to use MPI.
 There is a routine called `MPI_Sendrecv`, that combines a send and a receive into a single call. This can be useful
 to avoid deadlocks, but is not as generally useful as non-blocking communication. Works ok in a structured problem,
 but breaks down horribly in an unstructured problem.
+
+### Exercise 5: Rotating Information Around a Ring
+
+See linked exercises in README.md for details and `exercises/My_Solutions/Rotate_Info` for my solution.
