@@ -743,5 +743,24 @@ Structures are a pain as you need to know offsets which can be compiler dependen
 So you have to extract those at runtime. 
 
 
+### Case Study: Image Processing
+
+Start with a big array. Split into strips, and assign each to a process. Update will depend on neighbours.
+Halo trick (in this case lines) used to allow processes to update their own data.
+
+Edge detection. Take a pixel, and look at the difference between it and the mean of its neighbours. Our problem, is 
+to go the other way. This will take hundreds of iterations. 
+
+Going to use white fixed boundary conditions. 
+
+This is the discrete Laplacian, which is a common problem in physics. We are essentially solving
+the Poisson equation using the Jacobi solver,
+```
+new(i,j) = 0.25 * (old(i-1,j) + old(i+1,j) + old(i,j-1) + old(i,j+1) - edge(i,j))
+```
+where `old` is the old image, `new` is the new image, and `edge` is the edge image.
+
+In C, second dimension is contiguous, so split along the first dimension.
+
 
 
