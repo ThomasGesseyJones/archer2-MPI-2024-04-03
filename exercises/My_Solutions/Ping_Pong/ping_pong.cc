@@ -21,7 +21,7 @@ int main() {
     // List of analyses to perform
     int num_analyses = 10;
     int sizes[] = {300, 1000, 3000, 10000, 30000, 100000, 300000, 1000000, 3000000, 10000000};
-    int iterations[] = {10000, 3000, 1000, 300, 100, 100, 100, 100, 100, 100};
+    int iterations[] = {10000000, 3000000, 1000000, 300000, 100000, 100000, 10000, 10000, 1000, 1000};
 
     for (int analysis_id=0; analysis_id<num_analyses; analysis_id++) {
         // Start timing
